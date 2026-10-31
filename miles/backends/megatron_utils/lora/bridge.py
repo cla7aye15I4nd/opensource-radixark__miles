@@ -154,6 +154,7 @@ def _setup_lora_model_via_bridge(args: TrainerConfig) -> list:
         List of DDP-wrapped model chunks with LoRA applied.
     """
     from megatron.bridge.models.conversion.model_bridge import _megatron_local_name_to_global
+    from megatron.bridge.peft.utils import enable_expert_parallel_grad_sync_in_finalize
     from megatron.bridge.training.config import DistributedDataParallelConfig
     from megatron.bridge.utils.fusions import validate_rope_fusion_compatibility
 
@@ -239,6 +240,7 @@ def _setup_lora_model_via_bridge(args: TrainerConfig) -> list:
         )
         lora = create_adapter(args, target_modules=adapter_targets)
         transformed = lora(model_chunks, training=True)
+        enable_expert_parallel_grad_sync_in_finalize(transformed)
         if is_multi_lora_enabled(args):
             for chunk in transformed:
                 for module in chunk.modules():
